@@ -105,7 +105,7 @@ class AgentProfile:
     efficiency: Mapping[str, float]
     safety: Mapping[str, float]
     drift: Mapping[str, float | bool]
-    diagnostics: Mapping[str, float | int | str]
+    diagnostics: Mapping[str, float | int | str | bool]
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
