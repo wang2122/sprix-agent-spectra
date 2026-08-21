@@ -1,0 +1,15 @@
+name: Bug report
+description: Report reproducible evaluator or tooling behavior
+title: "[Bug]: "
+body:
+  - type: textarea
+    attributes:
+      label: Reproduction
+      description: Include versions, configuration, minimal item bank/outcomes, and observed behavior.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
