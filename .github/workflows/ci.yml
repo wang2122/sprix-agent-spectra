@@ -23,8 +23,12 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: pytest
+      - run: python examples/calibrate_bank.py
       - run: spectra-benchmark > benchmark-results.txt
+      - run: pip wheel . --no-deps --wheel-dir dist
       - uses: actions/upload-artifact@v4
         with:
-          name: synthetic-benchmark-py${{ matrix.python-version }}
-          path: benchmark-results.txt
+          name: spectra-validation-py${{ matrix.python-version }}
+          path: |
+            benchmark-results.txt
+            dist/*.whl
