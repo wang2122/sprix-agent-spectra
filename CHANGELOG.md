@@ -9,6 +9,7 @@
 - Auditable candidate ranking API.
 - Paired synthetic policy comparisons with common random numbers, standard errors, interval coverage, and deltas versus random selection.
 - A production-oriented research protocol covering data splits, contamination, differential item functioning, evidence retention, and claim language.
+- Three lightweight, publication-style SVG figures for the method, capability profile, and paired benchmark results.
 
 ### Changed
 
