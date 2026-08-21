@@ -4,14 +4,19 @@
 
 [![CI](https://github.com/wang2122/sprix-agent-spectra/actions/workflows/ci.yml/badge.svg)](https://github.com/wang2122/sprix-agent-spectra/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-244b73)](https://www.python.org/)
+[![Version 0.2.0](https://img.shields.io/badge/version-0.2.0-355c7d)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2f6f5e)](LICENSE)
-[![Research prototype](https://img.shields.io/badge/status-research%20prototype-b7791f)](#research-status)
+[![Research prototype](https://img.shields.io/badge/status-research%20prototype-b7791f)](#research-status-and-scope)
 
 SPECTRA is an adaptive psychometric evaluation engine for autonomous AI agents. It estimates **what an agent is good at**, **how certain that estimate is**, and **whether the capability is reliable, calibrated, safe, and cost-efficient**. Instead of averaging a fixed benchmark, SPECTRA chooses the next trial by expected information gain and produces an evidence-backed multidimensional Agent Profile.
 
 This repository is an open-source research output of **Sprix AI at 屿智同行**. The project is led by **Yichen Wang (CTO)** with **Yonghao Zhang (CEO, M.Eng. in Computer Science, Tsinghua University)** as a core contributor.
 
 > Research status: the evaluator, simulator, tests, and benchmark harness are implemented. The bundled item bank is synthetic and intended for estimator validation. Real deployment claims require a separately calibrated, versioned task bank.
+
+## Research status and scope
+
+Version 0.2 adds anchored item calibration, robust posterior optimization, paired policy experiments with uncertainty, and a tamper-evident evidence ledger. SPECTRA is a working research prototype—not a peer-reviewed universal leaderboard. Follow the [`RESEARCH_PROTOCOL.md`](RESEARCH_PROTOCOL.md) before making claims about real Agents.
 
 ## Why SPECTRA
 
@@ -23,17 +28,18 @@ The ontology and bank are replaceable. Teams can define domain-specific dimensio
 
 ## Core contributions
 
-- **Multidimensional capability inference** — fractional-response 2PL IRT with a Gaussian prior, MAP fitting, and Laplace posterior intervals.
+- **Multidimensional capability inference** — fractional-response 2PL IRT with a Gaussian prior, line-searched MAP fitting, Laplace posterior intervals, and convergence diagnostics.
 - **Adaptive, cost-aware testing** — D-optimal expected information gain balanced against capability coverage, repeated-trial value, latency, monetary cost, and contamination risk.
+- **Anchored bank calibration** — estimates difficulty and discrimination from reference Agents with shrinkage, standard errors, Brier score, and log-loss diagnostics.
 - **Evidence beyond final accuracy** — partial progress, safety violations, confidence calibration, repeat consistency, efficiency, and temporal drift.
 - **Conservative strengths** — strengths are ranked by posterior lower bounds, not point estimates; weak spots use upper bounds so sparse evidence is not overstated.
-- **Auditability** — typed item/outcome schemas, deterministic experiments, machine-readable JSON, and human-readable profile reports.
+- **Auditability** — ranked candidate decisions and trial outcomes can be exported as a hash-chained JSONL evidence ledger.
 
 ```mermaid
 flowchart LR
     A["Versioned item bank<br/>difficulty, loadings, cost, risk"] --> B["Adaptive selector<br/>EIG + coverage - cost - contamination"]
     B --> C["Agent trial<br/>task, tools, environment"]
-    C --> D["Evidence ledger<br/>score, progress, confidence, latency, safety"]
+    C --> D["Hash-chained evidence ledger<br/>decision, score, progress, confidence, cost, safety"]
     D --> E["MIRT posterior<br/>MAP + covariance"]
     E --> B
     E --> F["Agent Profile<br/>strengths, intervals, reliability, calibration, drift"]
@@ -51,14 +57,15 @@ spectra-demo
 Minimal API:
 
 ```python
-from sprix_spectra import SpectraEvaluator, TrialOutcome
+from sprix_spectra import EvidenceLedger, SpectraEvaluator, TrialOutcome
 
 evaluator = SpectraEvaluator(dimensions, calibrated_item_bank)
+ledger = EvidenceLedger()
 
 while True:
     decision = evaluator.select_next()
     result = run_agent_on_item(decision.item_id)
-    evaluator.add_outcome(TrialOutcome(
+    outcome = TrialOutcome(
         item_id=decision.item_id,
         score=result.score,
         progress=result.progress,
@@ -66,15 +73,19 @@ while True:
         latency_ms=result.latency_ms,
         cost=result.cost,
         policy_violations=result.policy_violations,
-    ))
+    )
+    evaluator.add_outcome(outcome)
+    ledger.append(outcome, decision)
     stop, reason = evaluator.stopping_status(max_trials=40, max_cost=50)
     if stop:
         break
 
 profile = evaluator.profile("agent://production/researcher-v3")
+assert ledger.verify()[0]
+print(ledger.root_hash)
 ```
 
-See [`examples/quickstart.py`](examples/quickstart.py) for a runnable end-to-end example and [`ALGORITHM.md`](ALGORITHM.md) for the equations, assumptions, calibration protocol, and threats to validity.
+See [`examples/quickstart.py`](examples/quickstart.py) for an end-to-end profile, [`examples/calibrate_bank.py`](examples/calibrate_bank.py) for anchored calibration, and [`ALGORITHM.md`](ALGORITHM.md) for equations and assumptions.
 
 ## Profile semantics
 
@@ -97,9 +108,15 @@ spectra-benchmark
 pytest
 ```
 
-The benchmark compares adaptive SPECTRA with random and round-robin selection across hidden synthetic agents. It reports latent RMSE, top-strength recovery, rank correlation, evaluation cost, and posterior interval width. The simulator includes nonlinear interactions, lapses, and observation noise that are absent from the fitted model.
+The benchmark compares adaptive SPECTRA with random and round-robin selection across 12 hidden synthetic Agents and 32 trials per Agent. Policies share seeds under a common-random-numbers design. Values are mean ± standard error.
 
-We intentionally do **not** freeze a marketing table in this README: CI recomputes the deterministic experiment, and synthetic results must not be interpreted as real-world SOTA evidence.
+| Policy | Latent RMSE ↓ | Top-3 recall ↑ | Rank correlation ↑ | Cost ↓ | Interval width ↓ | Coverage ↑ |
+|---|---:|---:|---:|---:|---:|---:|
+| **SPECTRA adaptive** | **0.655±0.064** | **0.889±0.063** | **0.776±0.050** | 26.26±0.68 | **58.45±0.66** | 0.979±0.021 |
+| Round robin | 0.872±0.052 | 0.611±0.080 | 0.534±0.090 | **18.59±0.51** | 68.71±1.24 | 0.990±0.010 |
+| Random | 0.819±0.079 | 0.583±0.083 | 0.540±0.128 | 29.22±0.68 | 67.12±0.60 | 0.958±0.032 |
+
+Against random selection, adaptive SPECTRA reduces latent RMSE by `0.164±0.084`, improves Top-3 strength recall by `0.306±0.087`, narrows intervals by `8.67±0.94` points, and uses `2.96±0.64` less simulated cost. These are deterministic synthetic regression results, not real-world SOTA evidence; CI recomputes them from source.
 
 ## Research foundations
 
@@ -123,7 +140,9 @@ SPECTRA is an independent implementation. It does not claim reproduction or endo
 
 ## Roadmap
 
-- [ ] Real reference-panel calibration pipeline and item-fit diagnostics
+- [x] Anchored reference-panel calibration and item diagnostics
+- [x] Tamper-evident decision/outcome evidence ledger
+- [x] Paired policy benchmark with uncertainty reporting
 - [ ] AgentBeats Green Agent adapter and A2A evidence envelopes
 - [ ] Hierarchical Bayesian model for agent families and tool stacks
 - [ ] Differential item functioning and contamination canaries
