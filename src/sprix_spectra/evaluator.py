@@ -83,6 +83,13 @@ class SpectraEvaluator:
         self.mean = np.zeros(size, dtype=float)
         self.covariance = np.eye(size, dtype=float) * prior_variance
         self.outcomes: list[TrialOutcome] = []
+        self.fit_diagnostics: dict[str, float | int | bool] = {
+            "converged": True,
+            "iterations": 0,
+            "objective": 0.0,
+            "gradient_norm": 0.0,
+            "line_search_backtracks": 0,
+        }
         self._median_cost = float(np.median([item.cost for item in items]))
         self._median_latency = float(np.median([item.expected_latency_ms for item in items]))
 
@@ -126,6 +133,32 @@ class SpectraEvaluator:
         if refit:
             self.fit()
 
+    def _posterior_terms(
+        self,
+        theta: np.ndarray,
+        outcomes: list[TrialOutcome],
+    ) -> tuple[float, np.ndarray, np.ndarray]:
+        size = len(self.dimensions)
+        prior_precision = np.eye(size) / self.prior_variance
+        objective = 0.5 * float(theta @ prior_precision @ theta)
+        gradient = prior_precision @ theta
+        hessian = prior_precision.copy()
+        for outcome in outcomes:
+            item = self.items[outcome.item_id]
+            design = self._design(item)
+            probability = float(sigmoid(design @ theta - item.discrimination * item.difficulty))
+            response = self._response(outcome)
+            weight = self._evidence_weight(outcome)
+            clipped_probability = float(np.clip(probability, 1e-12, 1.0 - 1e-12))
+            objective -= weight * (
+                response * math.log(clipped_probability)
+                + (1.0 - response) * math.log(1.0 - clipped_probability)
+            )
+            gradient += weight * design * (probability - response)
+            curvature = max(1e-8, probability * (1.0 - probability))
+            hessian += weight * curvature * np.outer(design, design)
+        return objective, gradient, hessian
+
     def _fit_outcomes(
         self,
         outcomes: list[TrialOutcome],
@@ -133,32 +166,48 @@ class SpectraEvaluator:
         initial: np.ndarray | None = None,
         max_iterations: int = 80,
         tolerance: float = 1e-7,
-    ) -> tuple[np.ndarray, np.ndarray, int]:
+    ) -> tuple[np.ndarray, np.ndarray, dict[str, float | int | bool]]:
         size = len(self.dimensions)
-        prior_precision = np.eye(size) / self.prior_variance
         theta = np.zeros(size, dtype=float) if initial is None else initial.astype(float).copy()
-        hessian = prior_precision.copy()
+        hessian = np.eye(size) / self.prior_variance
+        backtracks = 0
+        converged = False
+        gradient_norm = 0.0
 
         for iteration in range(max_iterations):
-            gradient = prior_precision @ theta
-            hessian = prior_precision.copy()
-            for outcome in outcomes:
-                item = self.items[outcome.item_id]
-                design = self._design(item)
-                probability = float(sigmoid(design @ theta - item.discrimination * item.difficulty))
-                response = self._response(outcome)
-                weight = self._evidence_weight(outcome)
-                gradient += weight * design * (probability - response)
-                curvature = max(1e-6, probability * (1.0 - probability))
-                hessian += weight * curvature * np.outer(design, design)
+            objective, gradient, hessian = self._posterior_terms(theta, outcomes)
+            gradient_norm = float(np.linalg.norm(gradient))
             step = stable_inverse(hessian) @ gradient
-            theta -= step
-            if float(np.linalg.norm(step)) < tolerance:
-                return theta, stable_inverse(hessian), iteration + 1
-        return theta, stable_inverse(hessian), max_iterations
+            descent = float(gradient @ step)
+            step_scale = 1.0
+            accepted = False
+            for _ in range(24):
+                candidate = theta - step_scale * step
+                candidate_objective, _, _ = self._posterior_terms(candidate, outcomes)
+                if candidate_objective <= objective - 1e-4 * step_scale * descent:
+                    theta = candidate
+                    accepted = True
+                    break
+                step_scale *= 0.5
+                backtracks += 1
+            if not accepted:
+                break
+            if float(np.linalg.norm(step_scale * step)) < tolerance or gradient_norm < tolerance:
+                converged = True
+                break
+
+        objective, gradient, hessian = self._posterior_terms(theta, outcomes)
+        diagnostics: dict[str, float | int | bool] = {
+            "converged": converged or not outcomes,
+            "iterations": iteration + 1,
+            "objective": objective,
+            "gradient_norm": float(np.linalg.norm(gradient)),
+            "line_search_backtracks": backtracks,
+        }
+        return theta, stable_inverse(hessian), diagnostics
 
     def fit(self) -> tuple[np.ndarray, np.ndarray]:
-        self.mean, self.covariance, _ = self._fit_outcomes(self.outcomes, initial=self.mean)
+        self.mean, self.covariance, self.fit_diagnostics = self._fit_outcomes(self.outcomes, initial=self.mean)
         return self.mean.copy(), self.covariance.copy()
 
     def predict(self, item_id: str) -> float:
@@ -166,7 +215,9 @@ class SpectraEvaluator:
         design = self._design(item)
         return float(sigmoid(design @ self.mean - item.discrimination * item.difficulty))
 
-    def select_next(self) -> SelectionDecision:
+    def rank_candidates(self, *, limit: int | None = None) -> tuple[SelectionDecision, ...]:
+        """Return the auditable candidate ranking used by the adaptive policy."""
+
         counts = Counter(outcome.item_id for outcome in self.outcomes)
         administered_dimensions = Counter()
         for outcome in self.outcomes:
@@ -227,9 +278,14 @@ class SpectraEvaluator:
                     ),
                 )
             )
-        if not candidates:
+        ranked = tuple(sorted(candidates, key=lambda candidate: (-candidate.objective, candidate.item_id)))
+        return ranked if limit is None else ranked[:limit]
+
+    def select_next(self) -> SelectionDecision:
+        ranked = self.rank_candidates(limit=1)
+        if not ranked:
             raise RuntimeError("no selectable items remain")
-        return max(candidates, key=lambda candidate: candidate.objective)
+        return ranked[0]
 
     def stopping_status(
         self,
@@ -290,12 +346,16 @@ class SpectraEvaluator:
         by_weakness = sorted(estimates, key=lambda estimate: (estimate.upper, estimate.score))
         responses = [self._response(outcome) for outcome in self.outcomes]
         posterior_sign, posterior_logdet = np.linalg.slogdet(self.covariance)
-        diagnostics: dict[str, float | int | str] = {
+        diagnostics: dict[str, float | int | str | bool] = {
             "trials": len(self.outcomes),
             "unique_items": len({outcome.item_id for outcome in self.outcomes}),
             "posterior_log_volume": float(posterior_logdet) if posterior_sign > 0 else float("inf"),
             "mean_interval_width": sum(estimate.upper - estimate.lower for estimate in estimates) / len(estimates),
             "model": "multidimensional-2PL-MAP",
+            "optimizer_converged": bool(self.fit_diagnostics["converged"]),
+            "optimizer_iterations": int(self.fit_diagnostics["iterations"]),
+            "optimizer_gradient_norm": float(self.fit_diagnostics["gradient_norm"]),
+            "optimizer_line_search_backtracks": int(self.fit_diagnostics["line_search_backtracks"]),
         }
         return AgentProfile(
             agent_id=agent_id,
