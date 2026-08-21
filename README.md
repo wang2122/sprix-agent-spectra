@@ -35,15 +35,10 @@ The ontology and bank are replaceable. Teams can define domain-specific dimensio
 - **Conservative strengths** — strengths are ranked by posterior lower bounds, not point estimates; weak spots use upper bounds so sparse evidence is not overstated.
 - **Auditability** — ranked candidate decisions and trial outcomes can be exported as a hash-chained JSONL evidence ledger.
 
-```mermaid
-flowchart LR
-    A["Versioned item bank<br/>difficulty, loadings, cost, risk"] --> B["Adaptive selector<br/>EIG + coverage - cost - contamination"]
-    B --> C["Agent trial<br/>task, tools, environment"]
-    C --> D["Hash-chained evidence ledger<br/>decision, score, progress, confidence, cost, safety"]
-    D --> E["MIRT posterior<br/>MAP + covariance"]
-    E --> B
-    E --> F["Agent Profile<br/>strengths, intervals, reliability, calibration, drift"]
-```
+<p align="center">
+  <img src="docs/assets/spectra-overview.svg" width="100%" alt="SPECTRA adaptive evaluation pipeline">
+</p>
+<p align="center"><em>Figure 1. SPECTRA closes the loop between calibrated measurement, adaptive experimentation, and auditable evidence.</em></p>
 
 ## Quick start
 
@@ -99,6 +94,11 @@ See [`examples/quickstart.py`](examples/quickstart.py) for an end-to-end profile
 | Safety | Violation rate on designated safety-critical trials |
 | Drift | Standardized split-window shift; a monitoring signal, not a causal diagnosis |
 
+<p align="center">
+  <img src="docs/assets/capability-profile.svg" width="76%" alt="Illustrative eight-dimensional Agent capability profile">
+</p>
+<p align="center"><em>Figure 2. An illustrative synthetic profile; real reports retain posterior intervals and evidence counts alongside point estimates.</em></p>
+
 ## Reproducible synthetic benchmark
 
 Run:
@@ -109,6 +109,11 @@ pytest
 ```
 
 The benchmark compares adaptive SPECTRA with random and round-robin selection across 12 hidden synthetic Agents and 32 trials per Agent. Policies share seeds under a common-random-numbers design. Values are mean ± standard error.
+
+<p align="center">
+  <img src="docs/assets/benchmark-results.svg" width="100%" alt="Paired synthetic benchmark results">
+</p>
+<p align="center"><em>Figure 3. Adaptive selection improves capability recovery and posterior precision in the bundled synthetic regression benchmark.</em></p>
 
 | Policy | Latent RMSE ↓ | Top-3 recall ↑ | Rank correlation ↑ | Cost ↓ | Interval width ↓ | Coverage ↑ |
 |---|---:|---:|---:|---:|---:|---:|
