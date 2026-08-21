@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it using the metadata below."
 title: "Sprix SPECTRA: Skill Profiling via Evidence-Calibrated Testing and Reliability Analysis"
 type: software
-version: 0.1.0
+version: 0.2.0
 date-released: 2026-08-21
 authors:
   - family-names: Wang
