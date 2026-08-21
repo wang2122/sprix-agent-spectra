@@ -19,7 +19,7 @@ y_i = (1 - λ) · final_score + λ · progress
 
 Safety-critical policy violations multiply `y_i` by `exp(-κv)`. Evidence from a high-contamination item receives weight `w_i(1-c_i)²`, where `c_i` is the estimated contamination risk.
 
-With Gaussian prior `θ ~ N(0, σ²I)`, SPECTRA obtains a MAP estimate by Newton updates on the fractional Bernoulli log-likelihood. The inverse observed Hessian is a Laplace approximation of posterior covariance. Reported intervals are posterior uncertainty intervals, not repeated-sampling guarantees.
+With Gaussian prior `θ ~ N(0, σ²I)`, SPECTRA obtains a MAP estimate by damped Newton updates on the fractional Bernoulli log-likelihood. Backtracking line search enforces objective descent under extreme evidence. The inverse observed Hessian is a Laplace approximation of posterior covariance. Reported intervals are posterior uncertainty intervals, not repeated-sampling guarantees.
 
 ## 2. Adaptive selection
 
@@ -42,6 +42,8 @@ utility(i) = EIG_i
 
 This is a cost-aware D-optimal design policy. Coverage prevents a high-information cluster from starving less-tested dimensions. Controlled repeats estimate test-retest consistency.
 
+`rank_candidates()` exposes the complete deterministic ranking and objective decomposition. This makes selection decisions auditable and supports future randomized policies that retain propensities for off-policy analysis.
+
 ## 3. Profile outputs
 
 - Capability score and 95% posterior interval per dimension
@@ -54,7 +56,23 @@ This is a cost-aware D-optimal design policy. Coverage prevents a high-informati
 - Safety violation rate
 - Split-window standardized drift signal
 
-## 4. Required calibration protocol
+## 4. Anchored item calibration
+
+Given reference Agents with fixed latent coordinates, SPECTRA projects each anchor onto an item's loading vector and fits:
+
+```text
+P(y_ai = 1) = sigmoid(β_0i + β_1i z_ai)
+a_i = β_1i
+b_i = -β_0i / β_1i
+```
+
+An empirical-Bayes penalty shrinks estimates toward the prior item parameters. SPECTRA reports standard errors, Brier score, and log loss, and retains items unchanged when observation count, outcome variance, or anchor spread is insufficient. Anchoring is required because simultaneously fitted item and Agent scales are otherwise unidentified up to location and scale transformations.
+
+## 5. Evidence integrity
+
+Each ledger record contains the selected-item decision, observed outcome, previous record hash, and current SHA-256 hash. Modification, deletion, insertion, or reordering breaks verification. This is tamper-evidence, not authentication: a malicious party capable of recomputing the whole chain can replace it, so production operators should sign and timestamp the final root hash externally.
+
+## 6. Required calibration protocol
 
 The demonstration bank is synthetic. A production bank should be calibrated on a diverse reference panel:
 
@@ -65,7 +83,9 @@ The demonstration bank is synthetic. A production bank should be calibrated on a
 5. Retire leaked or saturated items; keep a hidden canary pool for contamination audits.
 6. Recalibrate after material environment, model, or tool changes.
 
-## 5. Threats to validity
+See [`RESEARCH_PROTOCOL.md`](RESEARCH_PROTOCOL.md) for data separation, claim language, and audit requirements.
+
+## 7. Threats to validity
 
 - The chosen capability ontology is a modeling decision, not ground truth.
 - IRT local-independence assumptions can fail for related tasks or shared trajectories.
@@ -74,7 +94,7 @@ The demonstration bank is synthetic. A production bank should be calibrated on a
 - Self-reported confidence is only meaningful when the evaluated interface exposes it consistently.
 - Synthetic experiments test software behavior and estimator recovery; they are not evidence of superiority on real agents.
 
-## 6. Research extensions
+## 8. Research extensions
 
 - Hierarchical Bayesian calibration across model families and tool stacks
 - Contextual item response models for environment and permission conditions
