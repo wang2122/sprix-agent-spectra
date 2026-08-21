@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="720" viewBox="0 0 1000 720" role="img" aria-labelledby="title desc">
+  <title id="title">Illustrative eight-dimensional SPECTRA capability profile</title>
+  <desc id="desc">Radar chart of a synthetic agent with scores for reasoning, planning, tool use, coding, research, web navigation, safety, and recovery.</desc>
+  <defs>
+    <linearGradient id="profileFill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a7f78" stop-opacity="0.60"/>
+      <stop offset="1" stop-color="#245b73" stop-opacity="0.30"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#17324d" flood-opacity="0.14"/>
+    </filter>
+    <style>
+      .title { font: 700 28px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #17324d; }
+      .subtitle { font: 400 15px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #617687; }
+      .axis { font: 600 15px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #29475d; }
+      .score { font: 700 13px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #2a7f78; }
+      .tick { font: 500 11px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #8495a2; }
+      .caption { font: 400 12px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #617687; }
+    </style>
+  </defs>
+
+  <rect width="1000" height="720" rx="22" fill="#f8fafc"/>
+  <text x="500" y="46" text-anchor="middle" class="title">Evidence-backed Agent Capability Profile</text>
+  <text x="500" y="72" text-anchor="middle" class="subtitle">Illustrative synthetic profile · posterior scores shown on a 0–100 display scale</text>
+
+  <g stroke="#d5e0e7" fill="none">
+    <polygon points="500.0,312.0 533.9,326.1 548.0,360.0 533.9,393.9 500.0,408.0 466.1,393.9 452.0,360.0 466.1,326.1"/>
+    <polygon points="500.0,264.0 567.9,292.1 596.0,360.0 567.9,427.9 500.0,456.0 432.1,427.9 404.0,360.0 432.1,292.1"/>
+    <polygon points="500.0,216.0 601.8,258.2 644.0,360.0 601.8,461.8 500.0,504.0 398.2,461.8 356.0,360.0 398.2,258.2"/>
+    <polygon points="500.0,168.0 635.8,224.2 692.0,360.0 635.8,495.8 500.0,552.0 364.2,495.8 308.0,360.0 364.2,224.2"/>
+    <polygon points="500.0,120.0 669.7,190.3 740.0,360.0 669.7,529.7 500.0,600.0 330.3,529.7 260.0,360.0 330.3,190.3" stroke="#aebfca" stroke-width="1.5"/>
+    <path d="M500 360 L500 120 M500 360 L669.7 190.3 M500 360 L740 360 M500 360 L669.7 529.7 M500 360 L500 600 M500 360 L330.3 529.7 M500 360 L260 360 M500 360 L330.3 190.3"/>
+  </g>
+
+  <g class="tick">
+    <text x="507" y="316">20</text>
+    <text x="507" y="268">40</text>
+    <text x="507" y="220">60</text>
+    <text x="507" y="172">80</text>
+    <text x="507" y="124">100</text>
+  </g>
+
+  <polygon points="500.0,191.0 623.7,236.3 689.1,360.0 585.2,445.2 500.0,552.5 388.8,471.2 369.9,360.0 405.8,265.8" fill="url(#profileFill)" stroke="#2a7f78" stroke-width="3" filter="url(#shadow)"/>
+  <g fill="#ffffff" stroke="#2a7f78" stroke-width="3">
+    <circle cx="500.0" cy="191.0" r="6"/><circle cx="623.7" cy="236.3" r="6"/>
+    <circle cx="689.1" cy="360.0" r="6"/><circle cx="585.2" cy="445.2" r="6"/>
+    <circle cx="500.0" cy="552.5" r="6"/><circle cx="388.8" cy="471.2" r="6"/>
+    <circle cx="369.9" cy="360.0" r="6"/><circle cx="405.8" cy="265.8" r="6"/>
+  </g>
+
+  <g text-anchor="middle">
+    <text x="500" y="98" class="axis">Reasoning</text><text x="500" y="115" class="score">70.4</text>
+    <text x="699" y="174" class="axis">Planning</text><text x="699" y="191" class="score">72.9</text>
+    <text x="805" y="354" class="axis">Tool use</text><text x="805" y="371" class="score">78.8</text>
+    <text x="704" y="552" class="axis">Coding</text><text x="704" y="569" class="score">50.2</text>
+    <text x="500" y="636" class="axis">Research</text><text x="500" y="653" class="score">80.2</text>
+    <text x="290" y="552" class="axis">Web navigation</text><text x="290" y="569" class="score">65.5</text>
+    <text x="194" y="354" class="axis">Safety</text><text x="194" y="371" class="score">54.2</text>
+    <text x="294" y="174" class="axis">Recovery</text><text x="294" y="191" class="score">55.5</text>
+  </g>
+
+  <rect x="734" y="598" width="220" height="62" rx="12" fill="#ffffff" stroke="#d5e0e7"/>
+  <rect x="752" y="616" width="28" height="15" rx="4" fill="#2a7f78" fill-opacity="0.48" stroke="#2a7f78"/>
+  <text x="792" y="629" class="caption">Posterior point estimate</text>
+  <text x="844" y="649" text-anchor="middle" class="caption">Intervals remain in the profile table.</text>
+  <text x="500" y="695" text-anchor="middle" class="caption">Figure 2 · A multidimensional profile preserves strengths and deployment-critical weaknesses hidden by a scalar average.</text>
+</svg>
