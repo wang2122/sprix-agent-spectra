@@ -20,6 +20,7 @@ class ExperimentResult:
     rank_correlation: float
     total_cost: float
     mean_interval_width: float
+    latent_interval_coverage: float
 
     def to_dict(self) -> dict[str, float | str]:
         return self.__dict__.copy()
@@ -83,7 +84,24 @@ def evaluate_policy(
         rank_correlation=_rank_correlation(estimate, truth),
         total_cost=float(profile.efficiency["total_cost"]),
         mean_interval_width=float(profile.diagnostics["mean_interval_width"]),
+        latent_interval_coverage=float(
+            np.mean(
+                [
+                    ability.latent_mean - 1.96 * ability.latent_std
+                    <= truth[index]
+                    <= ability.latent_mean + 1.96 * ability.latent_std
+                    for index, ability in enumerate(profile.abilities)
+                ]
+            )
+        ),
     )
+
+
+def _mean_and_standard_error(values: list[float]) -> tuple[float, float]:
+    array = np.asarray(values, dtype=float)
+    mean = float(np.mean(array))
+    standard_error = float(np.std(array, ddof=1) / np.sqrt(len(array))) if len(array) > 1 else 0.0
+    return mean, standard_error
 
 
 def run_benchmark(*, seeds: int = 12, trials: int = 32) -> dict[str, dict[str, float]]:
@@ -100,32 +118,53 @@ def run_benchmark(*, seeds: int = 12, trials: int = 32) -> dict[str, dict[str, f
             calibration_bias=float(rng.normal(0.04, 0.04)),
             lapse_rate=float(rng.uniform(0.02, 0.08)),
         )
-        for policy_index, policy in enumerate(policies):
-            collected[policy].append(
-                evaluate_policy(policy, agent, seed=seed * 97 + policy_index, trials=trials, item_bank=bank)
-            )
+        # Common random numbers reduce variance in paired policy comparisons.
+        evaluation_seed = seed * 97
+        for policy in policies:
+            collected[policy].append(evaluate_policy(policy, agent, seed=evaluation_seed, trials=trials, item_bank=bank))
 
     summary: dict[str, dict[str, float]] = {}
-    fields = ("latent_rmse", "top3_recall", "rank_correlation", "total_cost", "mean_interval_width")
+    fields = (
+        "latent_rmse",
+        "top3_recall",
+        "rank_correlation",
+        "total_cost",
+        "mean_interval_width",
+        "latent_interval_coverage",
+    )
     for policy, results in collected.items():
-        summary[policy] = {
-            field: float(np.mean([getattr(result, field) for result in results])) for field in fields
-        }
+        summary[policy] = {}
+        for field in fields:
+            mean, standard_error = _mean_and_standard_error([getattr(result, field) for result in results])
+            summary[policy][field] = mean
+            summary[policy][f"{field}_se"] = standard_error
         summary[policy]["runs"] = float(len(results))
+    for policy in ("adaptive", "round_robin"):
+        for field in ("latent_rmse", "top3_recall", "rank_correlation", "total_cost", "mean_interval_width"):
+            differences = [
+                getattr(left, field) - getattr(right, field)
+                for left, right in zip(collected[policy], collected["random"], strict=True)
+            ]
+            mean, standard_error = _mean_and_standard_error(differences)
+            summary[policy][f"{field}_delta_vs_random"] = mean
+            summary[policy][f"{field}_delta_vs_random_se"] = standard_error
     return summary
 
 
 def benchmark_markdown(summary: dict[str, dict[str, float]]) -> str:
     lines = [
-        "| Policy | Latent RMSE ↓ | Top-3 recall ↑ | Rank corr. ↑ | Cost ↓ | Interval width ↓ |",
-        "|---|---:|---:|---:|---:|---:|",
+        "| Policy | Latent RMSE ↓ | Top-3 recall ↑ | Rank corr. ↑ | Cost ↓ | Width ↓ | Coverage ↑ |",
+        "|---|---:|---:|---:|---:|---:|---:|",
     ]
     for policy in ("adaptive", "round_robin", "random"):
         result = summary[policy]
         lines.append(
-            f"| {policy} | {result['latent_rmse']:.3f} | {result['top3_recall']:.3f} | "
-            f"{result['rank_correlation']:.3f} | {result['total_cost']:.2f} | "
-            f"{result['mean_interval_width']:.2f} |"
+            f"| {policy} | {result['latent_rmse']:.3f}±{result['latent_rmse_se']:.3f} | "
+            f"{result['top3_recall']:.3f}±{result['top3_recall_se']:.3f} | "
+            f"{result['rank_correlation']:.3f}±{result['rank_correlation_se']:.3f} | "
+            f"{result['total_cost']:.2f}±{result['total_cost_se']:.2f} | "
+            f"{result['mean_interval_width']:.2f}±{result['mean_interval_width_se']:.2f} | "
+            f"{result['latent_interval_coverage']:.3f}±{result['latent_interval_coverage_se']:.3f} |"
         )
     return "\n".join(lines)
 
