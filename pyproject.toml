@@ -4,21 +4,21 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sprix-agent-spectra"
-version = "0.1.0"
+version = "0.2.0"
 description = "Evidence-calibrated adaptive capability profiling for autonomous AI agents."
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
   {name = "Sprix AI at Yuzhi Tongxing"},
   {name = "Yichen Wang"},
   {name = "Yonghao Zhang"},
 ]
 dependencies = ["numpy>=1.24"]
+keywords = ["agent evaluation", "adaptive testing", "item response theory", "AI agents", "psychometrics"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -35,6 +35,7 @@ spectra-benchmark = "sprix_spectra.experiment:main"
 Homepage = "https://github.com/wang2122/sprix-agent-spectra"
 Repository = "https://github.com/wang2122/sprix-agent-spectra"
 Issues = "https://github.com/wang2122/sprix-agent-spectra/issues"
+Documentation = "https://github.com/wang2122/sprix-agent-spectra/blob/main/ALGORITHM.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]
