@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560" role="img" aria-labelledby="title desc">
+  <title id="title">Synthetic benchmark comparison of SPECTRA adaptive, round-robin, and random policies</title>
+  <desc id="desc">Three bar charts compare latent RMSE, top-three strength recall, and posterior interval width. SPECTRA adaptive performs best on all three quality metrics.</desc>
+  <defs>
+    <style>
+      .title { font: 700 28px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #17324d; }
+      .subtitle { font: 400 15px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #617687; }
+      .panel { font: 700 18px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #29475d; }
+      .label { font: 500 12px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #617687; }
+      .value { font: 700 13px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #29475d; }
+      .legend { font: 600 13px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #425a6c; }
+      .caption { font: 400 12px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #617687; }
+    </style>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#17324d" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="560" rx="22" fill="#f8fafc"/>
+  <text x="700" y="43" text-anchor="middle" class="title">Adaptive Testing Recovers Capability with Less Evidence</text>
+  <text x="700" y="68" text-anchor="middle" class="subtitle">12 synthetic Agents · 32 trials each · paired common-random-numbers design · mean ± standard error</text>
+
+  <g class="legend">
+    <rect x="455" y="88" width="18" height="12" rx="3" fill="#2a7f78"/><text x="481" y="99">SPECTRA adaptive</text>
+    <rect x="620" y="88" width="18" height="12" rx="3" fill="#355c7d"/><text x="646" y="99">Round robin</text>
+    <rect x="752" y="88" width="18" height="12" rx="3" fill="#9caab4"/><text x="778" y="99">Random</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="35" y="120" width="420" height="355" rx="16" fill="#ffffff" stroke="#dbe4ea"/>
+    <rect x="490" y="120" width="420" height="355" rx="16" fill="#ffffff" stroke="#dbe4ea"/>
+    <rect x="945" y="120" width="420" height="355" rx="16" fill="#ffffff" stroke="#dbe4ea"/>
+  </g>
+
+  <g>
+    <text x="245" y="153" text-anchor="middle" class="panel">Latent RMSE ↓</text>
+    <line x1="85" y1="430" x2="405" y2="430" stroke="#9fb0bc"/>
+    <line x1="85" y1="150" x2="85" y2="430" stroke="#9fb0bc"/>
+    <g stroke="#e7edf1"><line x1="85" y1="290" x2="405" y2="290"/><line x1="85" y1="150" x2="405" y2="150"/></g>
+    <text x="72" y="434" text-anchor="end" class="label">0</text><text x="72" y="294" text-anchor="end" class="label">0.5</text><text x="72" y="154" text-anchor="end" class="label">1.0</text>
+    <rect x="115" y="247" width="66" height="183" rx="5" fill="#2a7f78"/>
+    <rect x="215" y="186" width="66" height="244" rx="5" fill="#355c7d"/>
+    <rect x="315" y="201" width="66" height="229" rx="5" fill="#9caab4"/>
+    <g stroke="#17324d" stroke-width="2"><path d="M148 229 V265 M139 229 H157 M139 265 H157"/><path d="M248 171 V201 M239 171 H257 M239 201 H257"/><path d="M348 179 V223 M339 179 H357 M339 223 H357"/></g>
+    <text x="148" y="238" text-anchor="middle" class="value">0.655</text><text x="248" y="177" text-anchor="middle" class="value">0.872</text><text x="348" y="192" text-anchor="middle" class="value">0.819</text>
+    <text x="148" y="451" text-anchor="middle" class="label">Adaptive</text><text x="248" y="451" text-anchor="middle" class="label">Round</text><text x="348" y="451" text-anchor="middle" class="label">Random</text>
+  </g>
+
+  <g>
+    <text x="700" y="153" text-anchor="middle" class="panel">Top-3 Strength Recall ↑</text>
+    <line x1="540" y1="430" x2="860" y2="430" stroke="#9fb0bc"/>
+    <line x1="540" y1="150" x2="540" y2="430" stroke="#9fb0bc"/>
+    <g stroke="#e7edf1"><line x1="540" y1="290" x2="860" y2="290"/><line x1="540" y1="150" x2="860" y2="150"/></g>
+    <text x="527" y="434" text-anchor="end" class="label">0</text><text x="527" y="294" text-anchor="end" class="label">0.5</text><text x="527" y="154" text-anchor="end" class="label">1.0</text>
+    <rect x="570" y="181" width="66" height="249" rx="5" fill="#2a7f78"/>
+    <rect x="670" y="259" width="66" height="171" rx="5" fill="#355c7d"/>
+    <rect x="770" y="267" width="66" height="163" rx="5" fill="#9caab4"/>
+    <g stroke="#17324d" stroke-width="2"><path d="M603 163 V199 M594 163 H612 M594 199 H612"/><path d="M703 237 V281 M694 237 H712 M694 281 H712"/><path d="M803 244 V290 M794 244 H812 M794 290 H812"/></g>
+    <text x="603" y="172" text-anchor="middle" class="value">0.889</text><text x="703" y="250" text-anchor="middle" class="value">0.611</text><text x="803" y="258" text-anchor="middle" class="value">0.583</text>
+    <text x="603" y="451" text-anchor="middle" class="label">Adaptive</text><text x="703" y="451" text-anchor="middle" class="label">Round</text><text x="803" y="451" text-anchor="middle" class="label">Random</text>
+  </g>
+
+  <g>
+    <text x="1155" y="153" text-anchor="middle" class="panel">Posterior Interval Width ↓</text>
+    <line x1="995" y1="430" x2="1315" y2="430" stroke="#9fb0bc"/>
+    <line x1="995" y1="150" x2="995" y2="430" stroke="#9fb0bc"/>
+    <g stroke="#e7edf1"><line x1="995" y1="290" x2="1315" y2="290"/><line x1="995" y1="150" x2="1315" y2="150"/></g>
+    <text x="982" y="434" text-anchor="end" class="label">0</text><text x="982" y="294" text-anchor="end" class="label">40</text><text x="982" y="154" text-anchor="end" class="label">80</text>
+    <rect x="1025" y="225" width="66" height="205" rx="5" fill="#2a7f78"/>
+    <rect x="1125" y="190" width="66" height="240" rx="5" fill="#355c7d"/>
+    <rect x="1225" y="195" width="66" height="235" rx="5" fill="#9caab4"/>
+    <g stroke="#17324d" stroke-width="2"><path d="M1058 222 V228 M1049 222 H1067 M1049 228 H1067"/><path d="M1158 186 V194 M1149 186 H1167 M1149 194 H1167"/><path d="M1258 193 V197 M1249 193 H1267 M1249 197 H1267"/></g>
+    <text x="1058" y="216" text-anchor="middle" class="value">58.45</text><text x="1158" y="181" text-anchor="middle" class="value">68.71</text><text x="1258" y="186" text-anchor="middle" class="value">67.12</text>
+    <text x="1058" y="451" text-anchor="middle" class="label">Adaptive</text><text x="1158" y="451" text-anchor="middle" class="label">Round</text><text x="1258" y="451" text-anchor="middle" class="label">Random</text>
+  </g>
+
+  <rect x="338" y="492" width="724" height="37" rx="18" fill="#eef6f5" stroke="#b8d8d3"/>
+  <text x="700" y="516" text-anchor="middle" class="legend">Adaptive vs random: RMSE −0.164±0.084 · recall +0.306±0.087 · interval width −8.67±0.94</text>
+  <text x="700" y="548" text-anchor="middle" class="caption">Figure 3 · Synthetic regression evidence only; CI recomputes all values from source.</text>
+</svg>
